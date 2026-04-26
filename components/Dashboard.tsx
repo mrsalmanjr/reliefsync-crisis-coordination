@@ -2,6 +2,8 @@
 
 import { useCrisisStore } from '@/store/crisisStore'
 import { AlertTriangle, Users, TrendingUp, Activity } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { StaggerContainer, StaggerItem, GlowPulse } from './PremiumWrapper'
 
 export function Dashboard() {
   const tasks = useCrisisStore((state) => state.tasks)
@@ -19,26 +21,47 @@ export function Dashboard() {
   const activeTasks = tasks.filter((t) => t.status === 'in_progress')
 
   const StatCard = ({ icon: Icon, label, value, subtext, color }: any) => (
-    <div className="glass-hover group relative overflow-hidden rounded-xl p-6 cursor-pointer">
-      <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
-      <div className="relative z-10 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}>
-            <Icon className="w-6 h-6 text-white" />
+    <StaggerItem>
+      <motion.div
+        whileHover={{ scale: 1.02, y: -4 }}
+        transition={{ duration: 0.2 }}
+        className="glass-hover group relative overflow-hidden rounded-xl p-6 cursor-pointer"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+        <div className="relative z-10 space-y-4">
+          <div className="flex items-center justify-between">
+            <motion.div
+              className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}
+              whileHover={{ rotate: 5 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Icon className="w-6 h-6 text-white" />
+            </motion.div>
+            <motion.div
+              className="w-2 h-2 rounded-full bg-green-500"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
           </div>
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <div>
+            <p className="text-muted-foreground text-sm">{label}</p>
+            <motion.p
+              className="text-3xl font-bold mt-1 text-foreground"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              {value}
+            </motion.p>
+            <p className="text-xs text-muted-foreground mt-2">{subtext}</p>
+          </div>
         </div>
-        <div>
-          <p className="text-muted-foreground text-sm">{label}</p>
-          <p className="text-3xl font-bold mt-1 text-foreground">{value}</p>
-          <p className="text-xs text-muted-foreground mt-2">{subtext}</p>
-        </div>
-      </div>
-    </div>
+      </motion.div>
+    </StaggerItem>
   )
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
         icon={AlertTriangle}
         label="High Priority"
@@ -67,6 +90,6 @@ export function Dashboard() {
         subtext="Tasks resolved"
         color="bg-gradient-to-br from-purple-600 to-purple-500"
       />
-    </div>
+    </StaggerContainer>
   )
 }

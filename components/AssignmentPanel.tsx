@@ -4,6 +4,8 @@ import { useCrisisStore } from '@/store/crisisStore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, Zap, User, MapPin, TrendingUp } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { StaggerContainer, StaggerItem } from './PremiumWrapper'
 
 export function AssignmentPanel() {
   const tasks = useCrisisStore((state) => state.tasks)
@@ -21,10 +23,15 @@ export function AssignmentPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <StaggerContainer className="space-y-6">
       {pendingTasks.map((task) => {
         return (
-          <div key={task.id} className="glass rounded-xl p-6 space-y-6 slide-in-up">
+          <StaggerItem key={task.id}>
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              transition={{ duration: 0.2 }}
+              className="glass rounded-xl p-6 space-y-6 slide-in-up"
+            >
             {/* Task Header */}
             <div className="flex justify-between items-start pb-4 border-b border-white/10">
               <div className="space-y-1">
@@ -91,17 +98,26 @@ export function AssignmentPanel() {
                         </div>
 
                         {/* Match Details */}
-                        <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="grid grid-cols-3 gap-3 text-xs">
                           <div>
                             <p className="text-muted-foreground">Match Score</p>
                             <div className="mt-1 space-y-1">
                               <p className="text-sm font-bold text-accent">{match.matchScore}%</p>
                               <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                <div 
+                                <motion.div
                                   className="h-full bg-gradient-to-r from-accent to-blue-500 rounded-full"
-                                  style={{ width: `${scorePercent}%` }}
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${scorePercent}%` }}
+                                  transition={{ duration: 0.8, delay: 0.2 }}
                                 />
                               </div>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Distance</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <MapPin className="w-3 h-3 text-accent" />
+                              <p className="text-sm font-bold text-foreground">{match.distance} km</p>
                             </div>
                           </div>
                           <div>
@@ -121,9 +137,10 @@ export function AssignmentPanel() {
                 </div>
               )}
             </div>
-          </div>
+            </motion.div>
+          </StaggerItem>
         )
       })}
-    </div>
+    </StaggerContainer>
   )
 }

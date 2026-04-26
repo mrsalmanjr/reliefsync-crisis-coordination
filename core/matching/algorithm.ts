@@ -14,10 +14,19 @@ function calculateDistance(
   lat2: number,
   lng2: number
 ): number {
-  // Simplified Euclidean distance
-  const dx = lat2 - lat1
-  const dy = lng2 - lng1
-  return Math.sqrt(dx * dx + dy * dy)
+  // Haversine formula for accurate geographic distance in kilometers
+  const R = 6371 // Earth's radius in kilometers
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  const distance = R * c
+  return distance
 }
 
 function parseLocation(locationString: string): {
@@ -83,30 +92,41 @@ export function matchVolunteers(
         volunteer.lng
       )
 
-      // Distance score (inverse - closer is better)
-      const distanceScore = Math.max(
+      // Proximity score: inverse of distance (closer = higher score)
+      // Max score at 0km, decreases with distance
+      const proximityScore = Math.max(
         0,
-        100 - distance * 10
+        Math.min(100, 100 / (1 + distance * 0.5))
       )
 
-      // Availability bonus
-      const availabilityBonus = volunteer.available ? 10 : 0
+      // Skill match score (0-100)
+      const skillScore = skillMatch
 
-      // Combined score
+      // Availability multiplier
+      const availabilityMultiplier = volunteer.available ? 1 : 0.5
+
+      // Combined score using specified weights:
+      // Skill match: 50%, Proximity: 30%, Availability: 20%
       const matchScore =
-        (skillMatch * 0.5 +
-          distanceScore * 0.3 +
-          availabilityBonus) |
-        0
+        Math.round(
+          (skillScore * 0.5 + proximityScore * 0.3 + 100 * 0.2) *
+            availabilityMultiplier
+        )
+
+      // Determine reason based on highest contributing factor
+      let reason = 'Available volunteer'
+      if (skillScore > 50) reason = 'Skill match'
+      if (distance < 2 && skillScore > 50) reason = 'Skilled & nearby'
+      if (distance < 1) reason = 'Very close by'
 
       return {
         volunteer,
-        distance: Math.round(distance * 100) / 100,
-        matchScore: Math.round(matchScore),
-        reason: `${skillMatch > 0 ? 'Skill match ' : ''}${distance < 2 ? '+ nearby' : '+ available'}`,
+        distance: Math.round(distance * 10) / 10,
+        matchScore,
+        reason,
       }
     })
 
-  // Return top 3
+  // Return top 3 with highest match scores
   return scored.sort((a, b) => b.matchScore - a.matchScore).slice(0, 3)
 }
