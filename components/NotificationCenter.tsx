@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useCrisisStore } from '@/store/crisisStore'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,8 +12,31 @@ import {
   X,
   Zap,
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+const liveActivityLog = [
+  'Volunteer assigned to Zone A',
+  'New high-priority report received',
+  'Medical emergency detected',
+  'Relief team activated',
+  'Coordinator notified',
+]
 
 export function NotificationCenter() {
+  const [liveActivities, setLiveActivities] = useState<string[]>([])
+
+  // Simulate live activity stream
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const randomActivity = liveActivityLog[Math.floor(Math.random() * liveActivityLog.length)]
+      setLiveActivities((prev) => [
+        { message: randomActivity, id: Date.now() },
+        ...prev.slice(0, 4),
+      ] as any)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
+
   const notifications = useCrisisStore(
     (state) => state.notifications
   )
@@ -51,12 +75,34 @@ export function NotificationCenter() {
         )}
       </div>
 
+      {/* Live Activity Stream */}
+      <div className="space-y-2 flex-1 overflow-hidden">
+        <p className="text-xs text-muted-foreground px-2 font-medium">Live Activity</p>
+        <div className="space-y-1 max-h-32 overflow-y-auto pr-2">
+          <AnimatePresence>
+            {liveActivities.map((activity: any) => (
+              <motion.div
+                key={activity.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="flex items-center gap-2 px-2 py-1 rounded bg-white/5 border border-white/5 text-xs text-muted-foreground hover:border-white/10"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                <span className="truncate">{activity.message}</span>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Notifications */}
       {notifications.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-center">
-          <p className="text-muted-foreground text-sm">No updates yet</p>
+        <div className="flex items-center justify-center text-center py-4">
+          <p className="text-muted-foreground text-sm">No notifications yet</p>
         </div>
       ) : (
-        <div className="space-y-2 max-h-96 overflow-y-auto flex-1 pr-2">
+        <div className="space-y-2 max-h-48 overflow-y-auto flex-1 pr-2 border-t border-white/10 pt-4">
           {notifications.map((notif) => {
             const IconComponent = typeIcons[notif.type]
             const colors = typeColors[notif.type]

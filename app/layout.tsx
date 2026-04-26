@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { MagneticCursor } from '@/components/MagneticCursor'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -37,11 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <script src="/magnetic-layer.js"></script>
-      </head>
-      <body className="font-sans antialiased bg-background text-foreground cursor-none" data-ambient="true">
-        <MagneticCursor />
+      <body className="font-sans antialiased bg-background text-foreground">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

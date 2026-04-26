@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useCrisisStore } from '@/store/crisisStore'
-import { Card } from '@/components/ui/card'
+import { InteractiveMap } from '@/components/InteractiveMap'
 import { Badge } from '@/components/ui/badge'
 
 interface MapMarker {

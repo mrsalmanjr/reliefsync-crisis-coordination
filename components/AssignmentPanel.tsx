@@ -1,16 +1,24 @@
 'use client'
 
+import { useState } from 'react'
 import { useCrisisStore } from '@/store/crisisStore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, Zap, User, MapPin, TrendingUp } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { StaggerContainer, StaggerItem } from './PremiumWrapper'
 
 export function AssignmentPanel() {
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
   const tasks = useCrisisStore((state) => state.tasks)
   const volunteers = useCrisisStore((state) => state.volunteers)
   const assignTask = useCrisisStore((state) => state.assignTask)
+
+  const handleAssign = (volunteerId: string, taskId: string, volunteerName: string) => {
+    assignTask(taskId, volunteerId)
+    setToast({ message: `Assigned to ${volunteerName}`, type: 'success' })
+    setTimeout(() => setToast(null), 3000)
+  }
 
   const pendingTasks = tasks.filter((t) => t.status === 'pending')
 
@@ -23,6 +31,7 @@ export function AssignmentPanel() {
   }
 
   return (
+    <>
     <StaggerContainer className="space-y-6">
       {pendingTasks.map((task) => {
         return (
@@ -88,7 +97,7 @@ export function AssignmentPanel() {
                           ) : (
                             <Button
                               onClick={() =>
-                                assignTask(task.id, match.volunteer.id)
+                                handleAssign(match.volunteer.id, task.id, match.volunteer.name)
                               }
                               className="bg-gradient-to-r from-accent to-blue-500 hover:from-accent hover:to-blue-600 text-primary-foreground font-semibold whitespace-nowrap"
                             >
@@ -142,5 +151,24 @@ export function AssignmentPanel() {
         )
       })}
     </StaggerContainer>
+
+    {/* Toast Notification */}
+    {toast && (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className={`fixed bottom-8 left-8 z-50 px-4 py-3 rounded-lg glass border ${
+            toast.type === 'success'
+              ? 'bg-green-500/20 border-green-500/30 text-green-400'
+              : 'bg-blue-500/20 border-blue-500/30 text-blue-400'
+          }`}
+        >
+          <p className="text-sm font-medium">{toast.message}</p>
+        </motion.div>
+      </AnimatePresence>
+    )}
+    </>
   )
 }

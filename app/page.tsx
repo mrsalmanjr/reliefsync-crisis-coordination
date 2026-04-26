@@ -10,6 +10,7 @@ import { AssignmentPanel } from '@/components/AssignmentPanel'
 import { NotificationCenter } from '@/components/NotificationCenter'
 import { VolunteerPanel } from '@/components/VolunteerPanel'
 import { PremiumFooter } from '@/components/PremiumFooter'
+import { QuickActionFAB } from '@/components/QuickActionFAB'
 import { Shield, Zap, Users, Map, Settings } from 'lucide-react'
 
 export default function Home() {
@@ -133,6 +134,7 @@ export default function Home() {
         </Tabs>
         <PremiumFooter />
       </main>
+      <QuickActionFAB />
     </div>
   )
 }
