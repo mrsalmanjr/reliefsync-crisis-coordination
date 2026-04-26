@@ -15,12 +15,32 @@ export function ReportInput() {
     if (!text.trim()) return
 
     setIsSubmitting(true)
-    submitReport(text)
-    setText('')
+    try {
+      // Call Gemini AI analysis through API
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: text,
+          location: 'Current Location',
+          latitude: null,
+          longitude: null,
+        }),
+      })
 
-    setTimeout(() => {
-      setIsSubmitting(false)
-    }, 500)
+      if (response.ok) {
+        const result = await response.json()
+        console.log('[v0] Report submitted:', result)
+        submitReport(text)
+        setText('')
+      }
+    } catch (error) {
+      console.error('[v0] Report submission error:', error)
+    } finally {
+      setTimeout(() => {
+        setIsSubmitting(false)
+      }, 500)
+    }
   }
 
   const handleVoiceInput = () => {
