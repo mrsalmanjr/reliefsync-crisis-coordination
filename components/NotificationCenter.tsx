@@ -1,7 +1,6 @@
 'use client'
 
 import { useCrisisStore } from '@/store/crisisStore'
-import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +9,7 @@ import {
   CheckCircle,
   Clock,
   X,
+  Zap,
 } from 'lucide-react'
 
 export function NotificationCenter() {
@@ -28,70 +28,78 @@ export function NotificationCenter() {
     completion: CheckCircle,
   }
 
-  const typeBadgeColors = {
-    assignment: 'bg-red-100 text-red-800',
-    update: 'bg-blue-100 text-blue-800',
-    completion: 'bg-green-100 text-green-800',
+  const typeColors = {
+    assignment: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' },
+    update: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' },
+    completion: { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30' },
   }
 
   return (
-    <Card className="p-6 space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold flex items-center gap-2">
-          <Bell className="w-5 h-5" />
-          Notifications
-        </h3>
+    <div className="glass rounded-xl p-6 space-y-4 flex flex-col h-full">
+      <div className="flex justify-between items-center pb-4 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
+            <Zap className="w-5 h-5 text-accent" />
+          </div>
+          <div>
+            <h3 className="font-bold text-foreground">Activity</h3>
+            <p className="text-xs text-muted-foreground">Real-time updates</p>
+          </div>
+        </div>
         {unreadCount > 0 && (
-          <Badge className="bg-red-500">{unreadCount}</Badge>
+          <Badge className="bg-red-500 animate-pulse">{unreadCount}</Badge>
         )}
       </div>
 
       {notifications.length === 0 ? (
-        <p className="text-gray-500">No notifications yet</p>
+        <div className="flex-1 flex items-center justify-center text-center">
+          <p className="text-muted-foreground text-sm">No updates yet</p>
+        </div>
       ) : (
-        <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="space-y-2 max-h-96 overflow-y-auto flex-1 pr-2">
           {notifications.map((notif) => {
             const IconComponent = typeIcons[notif.type]
+            const colors = typeColors[notif.type]
 
             return (
               <div
                 key={notif.id}
-                className={`p-3 rounded border flex gap-3 items-start ${
+                className={`p-3 rounded-lg border transition-all duration-300 ${
                   notif.read
-                    ? 'bg-gray-50 border-gray-200'
-                    : 'bg-blue-50 border-blue-200'
+                    ? 'border-white/5 hover:border-white/10'
+                    : `glass ${colors.border} scale-in`
                 }`}
               >
-                <IconComponent className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <div className="flex gap-3 items-start">
+                  <div className={`${colors.bg} ${colors.text} rounded-lg p-2 flex-shrink-0 mt-0.5`}>
+                    <IconComponent className="w-4 h-4" />
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm">{notif.message}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {notif.time.toLocaleTimeString()}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground font-medium">{notif.message}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {notif.time.toLocaleTimeString()}
+                    </p>
+                  </div>
+
+                  {!notif.read && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        markNotificationAsRead(notif.id)
+                      }
+                      className="flex-shrink-0 hover:bg-white/10 rounded-lg"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
-
-                <Badge className={typeBadgeColors[notif.type]}>
-                  {notif.type}
-                </Badge>
-
-                {!notif.read && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      markNotificationAsRead(notif.id)
-                    }
-                    className="flex-shrink-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
             )
           })}
         </div>
       )}
-    </Card>
+    </div>
   )
 }

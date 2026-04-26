@@ -1,10 +1,9 @@
 'use client'
 
 import { useCrisisStore } from '@/store/crisisStore'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, Clock, Play, AlertCircle } from 'lucide-react'
+import { CheckCircle, Clock, Play, User } from 'lucide-react'
 
 interface VolunteerPanelProps {
   volunteerId: string
@@ -32,9 +31,9 @@ export function VolunteerPanel({
 
   if (!volunteer) {
     return (
-      <Card className="p-6 text-red-500">
-        Volunteer not found
-      </Card>
+      <div className="glass rounded-xl p-12 text-center">
+        <p className="text-red-400">Volunteer not found</p>
+      </div>
     )
   }
 
@@ -45,33 +44,51 @@ export function VolunteerPanel({
     updateTaskStatus(taskId, newStatus)
   }
 
+  const completedCount = assignedTasks.filter(t => t.status === 'completed').length
+
   return (
     <div className="space-y-6">
-      {/* Volunteer Info */}
-      <Card className="p-6 space-y-4">
-        <h2 className="text-2xl font-bold">{volunteer.name}</h2>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-600">Status</p>
-            <Badge
-              className={
-                volunteer.available
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-red-100 text-red-800'
-              }
-            >
-              {volunteer.available ? 'Available' : 'Unavailable'}
-            </Badge>
+      {/* Volunteer Profile */}
+      <div className="glass rounded-xl p-6 space-y-6">
+        <div className="flex items-start justify-between pb-4 border-b border-white/10">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-accent to-blue-500 flex items-center justify-center">
+              <User className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">{volunteer.name}</h2>
+              <p className="text-sm text-muted-foreground">Crisis Response Volunteer</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-gray-600">Skills</p>
-            <div className="flex gap-1 flex-wrap">
+          <Badge
+            className={
+              volunteer.available
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                : 'bg-red-500/20 text-red-400 border border-red-500/30'
+            }
+          >
+            {volunteer.available ? '● Available' : '● Unavailable'}
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Specializations</p>
+            <div className="flex gap-2 flex-wrap">
               {volunteer.skills.map((skill) => (
-                <Badge key={skill} variant="secondary">
+                <Badge key={skill} className="bg-accent/20 text-accent border-0">
                   {skill}
                 </Badge>
               ))}
+            </div>
+          </div>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Performance</p>
+            <div className="flex gap-3 items-end">
+              <div>
+                <p className="text-2xl font-bold text-foreground">{completedCount}</p>
+                <p className="text-xs text-muted-foreground">Tasks Completed</p>
+              </div>
             </div>
           </div>
         </div>
@@ -88,87 +105,89 @@ export function VolunteerPanel({
         >
           {volunteer.available ? 'Mark Unavailable' : 'Mark Available'}
         </Button>
-      </Card>
+      </div>
 
       {/* Assigned Tasks */}
-      <Card className="p-6 space-y-4">
-        <h3 className="text-xl font-bold flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" />
-          Assigned Tasks
-        </h3>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold flex items-center gap-2 text-foreground">
+            <Clock className="w-5 h-5 text-accent" />
+            Active Assignments ({assignedTasks.length})
+          </h3>
+        </div>
 
         {assignedTasks.length === 0 ? (
-          <p className="text-gray-500">No assigned tasks</p>
+          <div className="glass rounded-xl p-12 text-center">
+            <p className="text-muted-foreground">No assigned tasks</p>
+          </div>
         ) : (
           <div className="space-y-3">
-            {assignedTasks.map((task) => (
-              <div
-                key={task.id}
-                className="border rounded p-4 space-y-3"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold">
-                      Task {task.id.slice(-6)}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Status:{' '}
+            {assignedTasks.map((task) => {
+              const statusColors = {
+                pending: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                assigned: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+                in_progress: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+                completed: 'bg-green-500/20 text-green-400 border-green-500/30',
+              }
+              return (
+                <div
+                  key={task.id}
+                  className="glass rounded-lg p-4 space-y-4 slide-in-up"
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        Task {task.id.slice(-6)}
+                      </p>
                       <Badge
-                        variant="outline"
-                        className={{
-                          pending: 'bg-blue-50',
-                          assigned: 'bg-yellow-50',
-                          in_progress: 'bg-purple-50',
-                          completed: 'bg-green-50',
-                        }[task.status]}
+                        className={`${statusColors[task.status as keyof typeof statusColors]} border mt-2`}
                       >
                         {task.status}
                       </Badge>
-                    </p>
+                    </div>
+                    <Clock className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                   </div>
-                  <Clock className="w-5 h-5 text-gray-400" />
+
+                  <div className="flex gap-2">
+                    {task.status === 'assigned' && (
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          handleStatusChange(task.id, 'in_progress')
+                        }
+                        className="flex-1 bg-gradient-to-r from-accent to-blue-500 hover:from-accent hover:to-blue-600 text-primary-foreground font-semibold"
+                      >
+                        <Play className="w-4 h-4 mr-1" />
+                        Start
+                      </Button>
+                    )}
+
+                    {task.status === 'in_progress' && (
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          handleStatusChange(task.id, 'completed')
+                        }
+                        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Complete
+                      </Button>
+                    )}
+
+                    {task.status === 'completed' && (
+                      <Badge className="w-full justify-center bg-green-500/20 text-green-400 border border-green-500/30">
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Completed
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-
-                <div className="flex gap-2">
-                  {task.status === 'assigned' && (
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        handleStatusChange(task.id, 'in_progress')
-                      }
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Play className="w-4 h-4 mr-1" />
-                      Start
-                    </Button>
-                  )}
-
-                  {task.status === 'in_progress' && (
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        handleStatusChange(task.id, 'completed')
-                      }
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Complete
-                    </Button>
-                  )}
-
-                  {task.status === 'completed' && (
-                    <Badge className="w-full justify-center bg-green-100 text-green-800">
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Completed
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
-      </Card>
+      </div>
     </div>
   )
 }

@@ -1,8 +1,7 @@
 'use client'
 
 import { useCrisisStore } from '@/store/crisisStore'
-import { Card } from '@/components/ui/card'
-import { AlertTriangle, Users, TrendingUp } from 'lucide-react'
+import { AlertTriangle, Users, TrendingUp, Activity } from 'lucide-react'
 
 export function Dashboard() {
   const tasks = useCrisisStore((state) => state.tasks)
@@ -16,52 +15,58 @@ export function Dashboard() {
   )
 
   const availableVolunteers = volunteers.filter((v) => v.available)
-
   const completedTasks = tasks.filter((t) => t.status === 'completed')
+  const activeTasks = tasks.filter((t) => t.status === 'in_progress')
+
+  const StatCard = ({ icon: Icon, label, value, subtext, color }: any) => (
+    <div className="glass-hover group relative overflow-hidden rounded-xl p-6 cursor-pointer">
+      <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+      <div className="relative z-10 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}>
+            <Icon className="w-6 h-6 text-white" />
+          </div>
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+        </div>
+        <div>
+          <p className="text-muted-foreground text-sm">{label}</p>
+          <p className="text-3xl font-bold mt-1 text-foreground">{value}</p>
+          <p className="text-xs text-muted-foreground mt-2">{subtext}</p>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* High Priority Tasks */}
-      <Card className="p-6 space-y-2 bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
-          <h3 className="text-sm font-semibold text-gray-600">
-            High Priority
-          </h3>
-        </div>
-        <p className="text-3xl font-bold text-red-600">
-          {highPriorityTasks.length}
-        </p>
-        <p className="text-xs text-gray-600">Crisis tasks needing urgent attention</p>
-      </Card>
-
-      {/* Available Volunteers */}
-      <Card className="p-6 space-y-2 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-        <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-green-600" />
-          <h3 className="text-sm font-semibold text-gray-600">
-            Available Volunteers
-          </h3>
-        </div>
-        <p className="text-3xl font-bold text-green-600">
-          {availableVolunteers.length}/{volunteers.length}
-        </p>
-        <p className="text-xs text-gray-600">Ready to respond</p>
-      </Card>
-
-      {/* Completed Tasks */}
-      <Card className="p-6 space-y-2 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-blue-600" />
-          <h3 className="text-sm font-semibold text-gray-600">
-            Completed Tasks
-          </h3>
-        </div>
-        <p className="text-3xl font-bold text-blue-600">
-          {completedTasks.length}
-        </p>
-        <p className="text-xs text-gray-600">Total resolved</p>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <StatCard
+        icon={AlertTriangle}
+        label="High Priority"
+        value={highPriorityTasks.length}
+        subtext="Urgent crisis needs"
+        color="bg-gradient-to-br from-red-600 to-red-500"
+      />
+      <StatCard
+        icon={Activity}
+        label="Active Responses"
+        value={activeTasks.length}
+        subtext="In progress now"
+        color="bg-gradient-to-br from-accent to-blue-500"
+      />
+      <StatCard
+        icon={Users}
+        label="Available"
+        value={`${availableVolunteers.length}/${volunteers.length}`}
+        subtext="Ready to assist"
+        color="bg-gradient-to-br from-emerald-600 to-emerald-500"
+      />
+      <StatCard
+        icon={TrendingUp}
+        label="Completed"
+        value={completedTasks.length}
+        subtext="Tasks resolved"
+        color="bg-gradient-to-br from-purple-600 to-purple-500"
+      />
     </div>
   )
 }
