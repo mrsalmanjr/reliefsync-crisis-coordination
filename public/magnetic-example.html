@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magnetic Layer Demo</title>
+  <style>
+    :root {
+      --accent: #4F9DFF;
+      --primary: #0B0F14;
+      --background: #0B0F14;
+      --foreground: #E8EBEE;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(11, 15, 20, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 100;
+      padding: 1rem 2rem;
+    }
+
+    nav a {
+      color: var(--foreground);
+      text-decoration: none;
+      margin-right: 2rem;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+    }
+
+    /* Hero Section */
+    .hero {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-top: 60px;
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--accent), #8B5CF6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: #A0AEC0;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    /* CTA Button */
+    .cta-button {
+      display: inline-block;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, var(--accent), #8B5CF6);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(79, 157, 255, 0.3);
+    }
+
+    /* Section */
+    section {
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    section h2 {
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      color: var(--foreground);
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      transition: all 0.3s;
+    }
+
+    .card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--accent);
+    }
+
+    .card p {
+      color: #A0AEC0;
+      line-height: 1.8;
+    }
+
+    /* Grid of cards */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+
+    /* Parallax section */
+    .parallax-section {
+      height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .parallax-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(79, 157, 255, 0.1), rgba(139, 92, 246, 0.1));
+      z-index: -1;
+    }
+
+    .parallax-content {
+      text-align: center;
+      z-index: 1;
+    }
+
+    .parallax-content h2 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Footer */
+    footer {
+      background: rgba(15, 20, 25, 0.9);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      text-align: center;
+      color: #A0AEC0;
+    }
+
+    /* Scroll animation baseline */
+    [data-scroll-animate] {
+      transition: all 0.3s ease-out;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      nav {
+        padding: 0.5rem 1rem;
+      }
+
+      nav a {
+        display: block;
+        margin: 0.5rem 0;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      section {
+        padding: 2rem 1rem;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-ambient="true">
+  <!-- Navigation -->
+  <nav>
+    <a href="#home">Home</a>
+    <a href="#features">Features</a>
+    <a href="#showcase">Showcase</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="home" data-scroll-animate>
+    <div>
+      <h1>Magnetic Layer</h1>
+      <p>Premium animations with magnetic cursors, antigravity transitions, and ambient effects. No dependencies, pure vanilla JavaScript.</p>
+      <button class="cta-button magnetic">Get Started</button>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" data-scroll-animate>
+    <h2>Features</h2>
+    <div class="cards-grid">
+      <div class="card" data-magnetic>
+        <h3>Magnetic Cursor</h3>
+        <p>
+          Premium dual-ring cursor that responds to your movement with spring physics. 
+          Expands on hover and creates ripple effects on click.
+        </p>
+      </div>
+
+      <div class="card" data-magnetic>
+        <h3>Antigravity Transitions</h3>
+        <p>
+          Smooth page transitions with staggered exit animations and wipe panel effects. 
+          Elements float upward with blur as you navigate.
+        </p>
+      </div>
+
+      <div class="card" data-magnetic>
+        <h3>Scroll Animations</h3>
+        <p>
+          Elements animate in as they enter the viewport. Supports staggered children, 
+          parallax scrolling, and custom timing.
+        </p>
+      </div>
+
+      <div class="card" data-magnetic>
+        <h3>Ambient Effects</h3>
+        <p>
+          Subtle background canvas with drifting gradient orbs. Responds to cursor position 
+          and creates depth without distraction.
+        </p>
+      </div>
+
+      <div class="card" data-magnetic>
+        <h3>Zero Dependencies</h3>
+        <p>
+          Pure vanilla JavaScript, no frameworks or libraries required. Lightweight (~8KB), 
+          fast, and works on all modern browsers.
+        </p>
+      </div>
+
+      <div class="card" data-magnetic>
+        <h3>Non-Invasive</h3>
+        <p>
+          Drop it into any project without modifying HTML or breaking existing functionality. 
+          Respects accessibility and mobile devices.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Showcase Section -->
+  <section id="showcase" data-scroll-animate>
+    <h2>Interactive Showcase</h2>
+    <div class="parallax-section">
+      <div class="parallax-bg" data-parallax="slow"></div>
+      <div class="parallax-content" data-parallax="fast">
+        <h2>Try hovering, scrolling, and clicking</h2>
+        <p style="color: #A0AEC0; margin-top: 1rem;">
+          All elements with <code>data-magnetic</code> respond to your cursor
+        </p>
+      </div>
+    </div>
+
+    <div style="margin-top: 4rem;">
+      <h3 style="margin-bottom: 1rem;">Staggered List</h3>
+      <div data-scroll-animate>
+        <p data-stagger>This paragraph fades in</p>
+        <p data-stagger>Then this one appears</p>
+        <p data-stagger>And finally this one</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section id="contact" data-scroll-animate>
+    <h2 style="text-align: center; margin-bottom: 2rem;">Ready to add magic to your site?</h2>
+    <div style="text-align: center;">
+      <a href="/MAGNETIC_LAYER_README.md" class="cta-button">View Documentation</a>
+      <p style="color: #A0AEC0; margin-top: 2rem;">
+        Add one line of code: <code>&lt;script src="/magnetic-layer.js"&gt;&lt;/script&gt;</code>
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Magnetic Layer © 2024. Free to use and modify.</p>
+    <p style="margin-top: 1rem; font-size: 0.9rem;">
+      Developed with care. <a href="#" style="color: var(--accent); text-decoration: none;">Learn more</a>
+    </p>
+  </footer>
+
+  <!-- Load Magnetic Layer -->
+  <script src="/magnetic-layer.js"></script>
+
+  <!-- Optional: Debug info -->
+  <script>
+    window.addEventListener('load', () => {
+      console.log('Magnetic Layer loaded. API:', window.MagneticLayer)
+      console.log('Config:', window.MagneticLayer.config)
+    })
+  </script>
+</body>
+</html>

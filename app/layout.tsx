@@ -37,7 +37,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased bg-background text-foreground cursor-none">
+      <head>
+        <script src="/magnetic-layer.js"></script>
+      </head>
+      <body className="font-sans antialiased bg-background text-foreground cursor-none" data-ambient="true">
         <MagneticCursor />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
