@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { Loader } from 'lucide-react'
+import { useState } from 'react'
 
 interface MapMarker {
   id: string
@@ -26,202 +25,110 @@ export function InteractiveMap({
   center = { lat: 28.6139, lng: 77.209 },
   zoom = 11,
 }: InteractiveMapProps) {
-  const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useRef<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null)
-  const [apiError, setApiError] = useState(false)
 
-  useEffect(() => {
-    if (!mapContainer.current) return
-
-    // Check if Google Maps is available
-    if (typeof window === 'undefined' || !window.google) {
-      // API not loaded, show fallback
-      setApiError(true)
-      setIsLoading(false)
-      return
+  // Calculate relative positions for markers on the grid
+  const getMarkerPosition = (marker: MapMarker) => {
+    const x = ((marker.lng - 76.9) / 0.4) * 100
+    const y = ((28.8 - marker.lat) / 0.3) * 100
+    return {
+      left: Math.max(5, Math.min(95, x)),
+      top: Math.max(5, Math.min(95, y)),
     }
+  }
 
-    try {
-      const mapOptions = {
-        zoom: zoom,
-        center: center,
-        styles: [
-          {
-            elementType: 'geometry',
-            stylers: [{ color: '#1f2633' }],
-          },
-          {
-            elementType: 'labels.text.stroke',
-            stylers: [{ color: '#0b0f14' }],
-          },
-          {
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#e8ebee' }],
-          },
-          {
-            featureType: 'administrative.locality',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#a0aec0' }],
-          },
-          {
-            featureType: 'road',
-            elementType: 'geometry.fill',
-            stylers: [{ color: '#252f3c' }],
-          },
-          {
-            featureType: 'water',
-            elementType: 'geometry.fill',
-            stylers: [{ color: '#0f1419' }],
-          },
-        ],
-        disableDefaultUI: false,
-        zoomControl: true,
-        mapTypeControl: false,
-        fullscreenControl: true,
-      }
-
-      map.current = new window.google.maps.Map(mapContainer.current, mapOptions)
-
-      // Add markers
-      markers.forEach((marker) => {
-        const color =
-          marker.urgency === 'high'
-            ? '#FF5A5A'
-            : marker.urgency === 'medium'
-              ? '#F59E0B'
-              : '#10B981'
-
-        const markerIcon = {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: color,
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 2,
-        }
-
-        const gmarker = new window.google.maps.Marker({
-          position: { lat: marker.lat, lng: marker.lng },
-          map: map.current,
-          title: marker.title,
-          icon: markerIcon,
-        })
-
-        gmarker.addListener('click', () => {
-          setSelectedMarker(marker.id)
-          map.current.panTo({ lat: marker.lat, lng: marker.lng })
-          map.current.setZoom(13)
-        })
-      })
-
-      setIsLoading(false)
-    } catch (error) {
-      console.error('[v0] Map initialization error:', error)
-      setApiError(true)
-      setIsLoading(false)
+  const getMarkerColor = (urgency: 'high' | 'medium' | 'low') => {
+    switch (urgency) {
+      case 'high':
+        return 'bg-red-500/20 text-red-400 border-red-500/30'
+      case 'medium':
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+      case 'low':
+        return 'bg-green-500/20 text-green-400 border-green-500/30'
     }
-  }, [markers, center, zoom])
+  }
 
   return (
-    <div className="relative w-full h-[500px] rounded-xl overflow-hidden border border-white/10 bg-card">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-10">
-          <div className="flex flex-col items-center gap-2">
-            <Loader className="w-6 h-6 text-accent animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading map...</p>
-          </div>
-        </div>
-      )}
-
-      {apiError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-card to-card/50 z-10">
-          <div className="text-center space-y-3">
-            <p className="text-sm text-muted-foreground">Map API not configured</p>
-            <p className="text-xs text-muted-foreground/70">
-              To enable Google Maps:
-              <br />
-              1. Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to .env.local
-              <br />
-              2. Enable Maps JavaScript API in Google Cloud Console
-            </p>
-            <div className="mt-4 p-4 rounded-lg bg-accent/10 border border-accent/20">
-              <p className="text-xs text-accent">
-                For demo: Static map is displayed with markers positioned using coordinates
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div ref={mapContainer} className="w-full h-full" />
-
-      {/* Fallback grid-based map */}
-      {apiError && (
-        <div className="absolute inset-0 p-6">
-          <div
-            className="w-full h-full rounded-lg grid"
-            style={{
-              backgroundImage:
-                'linear-gradient(#252f3c 1px, transparent 1px), linear-gradient(90deg, #252f3c 1px, transparent 1px)',
-              backgroundSize: '40px 40px',
-            }}
+    <div className="relative w-full h-[500px] rounded-xl overflow-hidden border border-white/10 glass">
+      {/* Grid background */}
+      <svg
+        className="absolute inset-0 w-full h-full"
+        style={{ pointerEvents: 'none' }}
+      >
+        <defs>
+          <pattern
+            id="grid"
+            width="40"
+            height="40"
+            patternUnits="userSpaceOnUse"
           >
-            {markers.map((marker) => {
-              const x = ((marker.lng - 77.0) / 0.3) * 100
-              const y = ((28.8 - marker.lat) / 0.3) * 100
-              const color =
+            <path
+              d="M 40 0 L 0 0 0 40"
+              fill="none"
+              stroke="#252f3c"
+              strokeWidth="0.5"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+
+      {/* Markers */}
+      {markers.map((marker) => {
+        const pos = getMarkerPosition(marker)
+        const isSelected = selectedMarker === marker.id
+        const color = getMarkerColor(marker.urgency)
+
+        return (
+          <button
+            key={marker.id}
+            onClick={() => setSelectedMarker(isSelected ? null : marker.id)}
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-150 z-10 group"
+            style={{
+              left: `${pos.left}%`,
+              top: `${pos.top}%`,
+            }}
+            title={marker.title}
+          >
+            {/* Pulse ring for high urgency */}
+            {marker.urgency === 'high' && (
+              <div className="absolute inset-0 w-4 h-4 rounded-full bg-red-500/30 animate-pulse" />
+            )}
+            {/* Marker dot */}
+            <div
+              className={`relative w-4 h-4 rounded-full border-2 border-white shadow-lg transition-all ${
                 marker.urgency === 'high'
                   ? 'bg-red-500'
                   : marker.urgency === 'medium'
                     ? 'bg-yellow-500'
                     : 'bg-green-500'
+              } ${isSelected ? 'ring-2 ring-accent ring-offset-2' : ''}`}
+            />
+          </button>
+        )
+      })}
 
-              return (
-                <button
-                  key={marker.id}
-                  onClick={() => setSelectedMarker(marker.id)}
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-125"
-                  style={{
-                    left: `${Math.max(5, Math.min(95, x))}%`,
-                    top: `${Math.max(5, Math.min(95, y))}%`,
-                  }}
-                  title={marker.title}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full border-2 border-white shadow-lg ${color}`}
-                  />
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Selected marker info */}
-      {selectedMarker && !isLoading && (
-        <div className="absolute bottom-4 left-4 right-4 z-20">
-          <div className="glass rounded-lg p-4 space-y-2 animate-in fade-in slide-in-from-bottom-4">
+      {/* Selected marker info popup */}
+      {selectedMarker && (
+        <div className="absolute bottom-4 left-4 right-4 z-20 animate-in fade-in slide-in-from-bottom-2">
+          <div className="glass rounded-lg p-4 space-y-2 border border-white/20">
             {markers
               .filter((m) => m.id === selectedMarker)
               .map((marker) => (
                 <div key={marker.id}>
-                  <p className="font-semibold text-foreground">{marker.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}
+                  <p className="font-semibold text-foreground text-sm">
+                    {marker.title}
                   </p>
-                  <div className="flex gap-2 mt-2">
+                  <p className="text-xs text-muted-foreground">
+                    📍 {marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}
+                  </p>
+                  <div className="flex gap-2 mt-3 flex-wrap">
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        marker.urgency === 'high'
-                          ? 'bg-red-500/20 text-red-400'
-                          : marker.urgency === 'medium'
-                            ? 'bg-yellow-500/20 text-yellow-400'
-                            : 'bg-green-500/20 text-green-400'
-                      }`}
+                      className={`text-xs px-2 py-1 rounded-full border ${getMarkerColor(
+                        marker.urgency
+                      )}`}
                     >
-                      {marker.urgency.toUpperCase()}
+                      {marker.urgency.toUpperCase()} PRIORITY
                     </span>
                   </div>
                 </div>
@@ -229,6 +136,27 @@ export function InteractiveMap({
           </div>
         </div>
       )}
+
+      {/* Legend */}
+      <div className="absolute top-4 right-4 z-20 glass rounded-lg p-3 border border-white/20">
+        <p className="text-xs text-muted-foreground mb-2 font-semibold">
+          Priority Levels
+        </p>
+        <div className="space-y-1 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-500" />
+            <span className="text-muted-foreground">High</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span className="text-muted-foreground">Medium</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-muted-foreground">Low</span>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
