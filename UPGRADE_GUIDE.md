@@ -170,7 +170,7 @@ POSTGRES_URL=your_db_connection
 # Google Maps
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key
 
-# AI (Optional - uses Vercel AI Gateway by default)
+# AI (Optional - uses a centralized AI gateway by default)
 AI_GATEWAY_API_KEY=optional
 ```
 
@@ -260,12 +260,12 @@ Result: Automatically appears in other tab
 
 ## Deployment
 
-### Vercel
+### Production Setup
 ```bash
-# 1. Connect Supabase and Google Maps
-# 2. Set environment variables in Vercel project settings
-# 3. Deploy
-vercel deploy
+# 1. Initialize your production environment
+# 2. Set environment variables in your provider settings
+# 3. Deploy the build
+npm run build
 
 # 4. Run migration
 node scripts/migrate.js

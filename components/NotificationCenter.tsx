@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useCrisisStore } from '@/store/crisisStore'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,39 +10,15 @@ import {
   CheckCircle,
   Clock,
   X,
-  Zap,
+  Radio,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const liveActivityLog = [
-  'Volunteer assigned to Zone A',
-  'New high-priority report received',
-  'Medical emergency detected',
-  'Relief team activated',
-  'Coordinator notified',
-]
-
 export function NotificationCenter() {
-  const [liveActivities, setLiveActivities] = useState<string[]>([])
-
-  // Simulate live activity stream
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const randomActivity = liveActivityLog[Math.floor(Math.random() * liveActivityLog.length)]
-      setLiveActivities((prev) => [
-        { message: randomActivity, id: Date.now() },
-        ...prev.slice(0, 4),
-      ] as any)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const notifications = useCrisisStore(
-    (state) => state.notifications
-  )
-  const markNotificationAsRead = useCrisisStore(
-    (state) => state.markNotificationAsRead
-  )
+  const [isOpen, setIsOpen] = useState(false)
+  const notifications = useCrisisStore((state) => state.notifications)
+  const activities = useCrisisStore((state) => state.activities)
+  const markNotificationAsRead = useCrisisStore((state) => state.markNotificationAsRead)
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -59,93 +35,109 @@ export function NotificationCenter() {
   }
 
   return (
-    <div className="glass rounded-xl p-6 space-y-4 flex flex-col h-full">
-      <div className="flex justify-between items-center pb-4 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
-            <Zap className="w-5 h-5 text-accent" />
-          </div>
-          <div>
-            <h3 className="font-bold text-foreground">Activity</h3>
-            <p className="text-xs text-muted-foreground">Real-time updates</p>
-          </div>
-        </div>
+    <div className="relative">
+      {/* Bell Icon Trigger */}
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-all relative group"
+      >
+        <Bell className={`w-5 h-5 transition-colors ${unreadCount > 0 ? 'text-accent' : 'text-muted-foreground'}`} />
         {unreadCount > 0 && (
-          <Badge className="bg-red-500 animate-pulse">{unreadCount}</Badge>
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#050505] animate-bounce">
+            {unreadCount}
+          </span>
         )}
       </div>
 
-      {/* Live Activity Stream */}
-      <div className="space-y-2 flex-1 overflow-hidden">
-        <p className="text-xs text-muted-foreground px-2 font-medium">Live Activity</p>
-        <div className="space-y-1 max-h-32 overflow-y-auto pr-2">
-          <AnimatePresence>
-            {liveActivities.map((activity: any) => (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="flex items-center gap-2 px-2 py-1 rounded bg-white/5 border border-white/5 text-xs text-muted-foreground hover:border-white/10"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                <span className="truncate">{activity.message}</span>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Notifications */}
-      {notifications.length === 0 ? (
-        <div className="flex items-center justify-center text-center py-4">
-          <p className="text-muted-foreground text-sm">No notifications yet</p>
-        </div>
-      ) : (
-        <div className="space-y-2 max-h-48 overflow-y-auto flex-1 pr-2 border-t border-white/10 pt-4">
-          {notifications.map((notif) => {
-            const IconComponent = typeIcons[notif.type]
-            const colors = typeColors[notif.type]
-
-            return (
-              <div
-                key={notif.id}
-                className={`p-3 rounded-lg border transition-all duration-300 ${
-                  notif.read
-                    ? 'border-white/5 hover:border-white/10'
-                    : `glass ${colors.border} scale-in`
-                }`}
-              >
-                <div className="flex gap-3 items-start">
-                  <div className={`${colors.bg} ${colors.text} rounded-lg p-2 flex-shrink-0 mt-0.5`}>
-                    <IconComponent className="w-4 h-4" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground font-medium">{notif.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {notif.time.toLocaleTimeString()}
-                    </p>
-                  </div>
-
-                  {!notif.read && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        markNotificationAsRead(notif.id)
-                      }
-                      className="flex-shrink-0 hover:bg-white/10 rounded-lg"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop for closing */}
+            <div 
+              className="fixed inset-0 z-[110]" 
+              onClick={() => setIsOpen(false)} 
+            />
+            
+            {/* Popover Panel */}
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="absolute top-12 right-0 w-80 max-h-[500px] bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl z-[120] overflow-hidden flex flex-col"
+            >
+              <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                <div className="flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-accent animate-pulse" />
+                  <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Mission Intelligence</h3>
                 </div>
+                <Badge variant="outline" className="text-[10px] opacity-50 border-white/10">
+                  {notifications.length} Total
+                </Badge>
               </div>
-            )
-          })}
-        </div>
-      )}
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+                {notifications.length === 0 ? (
+                  <div className="py-10 text-center space-y-2">
+                    <Clock className="w-8 h-8 text-muted-foreground/20 mx-auto" />
+                    <p className="text-xs text-muted-foreground uppercase tracking-widest font-black">No Active Comms</p>
+                  </div>
+                ) : (
+                  notifications.map((notif) => {
+                    const IconComponent = typeIcons[notif.type] || Clock
+                    const colors = typeColors[notif.type] || typeColors.update
+
+                    return (
+                      <div
+                        key={notif.id}
+                        className={`p-3 rounded-xl border transition-all relative overflow-hidden group ${
+                          notif.read
+                            ? 'border-white/5 bg-transparent opacity-60'
+                            : `bg-white/5 ${colors.border}`
+                        }`}
+                      >
+                        <div className="flex gap-3 items-start relative z-10">
+                          <div className={`${colors.bg} ${colors.text} rounded-lg p-2 flex-shrink-0`}>
+                            <IconComponent className="w-4 h-4" />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-foreground font-bold leading-tight">{notif.message}</p>
+                            <p className="text-[10px] text-muted-foreground/60 mt-1 font-mono uppercase">
+                              {new Date(notif.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+
+                          {!notif.read && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                markNotificationAsRead(notif.id)
+                              }}
+                              className="p-1 rounded-md hover:bg-white/10 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              <div className="p-3 bg-white/[0.02] border-t border-white/5">
+                <Button 
+                  variant="ghost" 
+                  className="w-full text-[10px] font-black uppercase tracking-widest h-8 hover:bg-white/5"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Close Operational Feed
+                </Button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

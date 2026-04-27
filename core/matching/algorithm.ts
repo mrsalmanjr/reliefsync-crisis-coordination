@@ -57,19 +57,12 @@ function calculateSkillMatch(
 ): number {
   let matches = 0
   needTypes.forEach((need) => {
-    const requiredSkills =
-      SKILL_MAPPING[need as keyof typeof SKILL_MAPPING] || []
-    requiredSkills.forEach((skill) => {
-      if (
-        volunteerSkills.some((vs) =>
-          vs.toLowerCase().includes(skill)
-        )
-      ) {
-        matches++
-      }
-    })
+    const requiredSkills = SKILL_MAPPING[need as keyof typeof SKILL_MAPPING] || []
+    if (volunteerSkills.some(vs => requiredSkills.some(rs => vs.toLowerCase().includes(rs)))) {
+      matches++
+    }
   })
-  return Math.min(matches * 25, 100) // Max 100
+  return needTypes.length > 0 ? matches / needTypes.length : 0
 }
 
 export function matchVolunteers(
@@ -81,7 +74,7 @@ export function matchVolunteers(
   const scored = volunteers
     .filter((v) => v.available)
     .map((volunteer) => {
-      const skillMatch = calculateSkillMatch(
+      const skillMatchRatio = calculateSkillMatch(
         volunteer.skills,
         parsedReport.type
       )
@@ -92,32 +85,15 @@ export function matchVolunteers(
         volunteer.lng
       )
 
-      // Proximity score: inverse of distance (closer = higher score)
-      // Max score at 0km, decreases with distance
-      const proximityScore = Math.max(
-        0,
-        Math.min(100, 100 / (1 + distance * 0.5))
-      )
+      // formula: score = (skill_match * 50) + (1 / distance * 30)
+      // distance adjusted to avoid division by zero
+      const distanceFactor = 1 / (Math.max(0.1, distance))
+      const matchScore = Math.round((skillMatchRatio * 50) + (distanceFactor * 30))
 
-      // Skill match score (0-100)
-      const skillScore = skillMatch
-
-      // Availability multiplier
-      const availabilityMultiplier = volunteer.available ? 1 : 0.5
-
-      // Combined score using specified weights:
-      // Skill match: 50%, Proximity: 30%, Availability: 20%
-      const matchScore =
-        Math.round(
-          (skillScore * 0.5 + proximityScore * 0.3 + 100 * 0.2) *
-            availabilityMultiplier
-        )
-
-      // Determine reason based on highest contributing factor
       let reason = 'Available volunteer'
-      if (skillScore > 50) reason = 'Skill match'
-      if (distance < 2 && skillScore > 50) reason = 'Skilled & nearby'
-      if (distance < 1) reason = 'Very close by'
+      if (skillMatchRatio > 0.8) reason = 'Perfect skill match'
+      else if (distance < 1) reason = 'Extremely close'
+      else if (skillMatchRatio > 0.5) reason = 'Strong skill match'
 
       return {
         volunteer,
@@ -127,6 +103,5 @@ export function matchVolunteers(
       }
     })
 
-  // Return top 3 with highest match scores
   return scored.sort((a, b) => b.matchScore - a.matchScore).slice(0, 3)
 }

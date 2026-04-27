@@ -164,4 +164,19 @@
       transform: scale(1);
     }
   }
+
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+    background-image: linear-gradient(
+      to right,
+      rgba(79, 157, 255, 0) 0%,
+      rgba(79, 157, 255, 0.5) 50%,
+      rgba(79, 157, 255, 0) 100%
+    );
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
 }

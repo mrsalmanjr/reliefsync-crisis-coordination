@@ -349,8 +349,8 @@ npm run build
 # Start
 npm run start
 
-# Or deploy to Vercel
-vercel deploy
+# Deploy to production
+npm run build
 ```
 
 **No additional setup required.** The app works with or without Google Maps API configured (graceful fallback).

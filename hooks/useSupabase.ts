@@ -36,7 +36,7 @@ export function useReports() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'reports' },
         (payload) => {
-          console.log('[v0] Report update:', payload)
+          console.log('[ReliefSync AI] Report update:', payload)
           if (payload.eventType === 'INSERT') {
             setReports((prev) => [payload.new as any, ...prev])
           } else if (payload.eventType === 'UPDATE') {
@@ -84,7 +84,7 @@ export function useVolunteers() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'volunteers' },
         (payload) => {
-          console.log('[v0] Volunteer update:', payload)
+          console.log('[ReliefSync AI] Volunteer update:', payload)
           if (payload.eventType === 'INSERT') {
             setVolunteers((prev) => [payload.new as any, ...prev])
           } else if (payload.eventType === 'UPDATE') {
@@ -131,7 +131,7 @@ export function useAssignments() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'assignments' },
         (payload) => {
-          console.log('[v0] Assignment update:', payload)
+          console.log('[ReliefSync AI] Assignment update:', payload)
           if (payload.eventType === 'INSERT') {
             setAssignments((prev) => [payload.new as any, ...prev])
           } else if (payload.eventType === 'UPDATE') {

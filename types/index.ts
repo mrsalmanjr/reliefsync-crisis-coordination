@@ -11,9 +11,24 @@ export interface ParsedReport {
   type: string[]
   people: number
   location: string
+  lat?: number
+  lng?: number
   keywords: string[]
   urgency: UrgencyScore
+  action?: string
+  confidence: number
   createdAt: Date
+}
+
+export interface Insight {
+  id: string
+  title: string
+  description: string
+  riskLevel: 'low' | 'medium' | 'high'
+  location: string
+  prepAction: string
+  confidence: number
+  timestamp: Date
 }
 
 export interface UrgencyScore {
@@ -25,7 +40,7 @@ export interface Task {
   id: string
   reportId: string
   parsedReportId: string
-  status: 'pending' | 'assigned' | 'in_progress' | 'completed'
+  status: 'detected' | 'analyzed' | 'assigned' | 'in_progress' | 'completed'
   assignedVolunteerId?: string
   matchedVolunteers: MatchedVolunteer[]
   createdAt: Date

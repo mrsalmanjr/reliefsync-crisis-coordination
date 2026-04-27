@@ -1,206 +1,157 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { useCrisisStore } from '@/store/crisisStore'
-import { InteractiveMap } from '@/components/InteractiveMap'
 import { Badge } from '@/components/ui/badge'
 
-interface MapMarker {
-  id: string
-  lat: number
-  lng: number
-  type: string
-  urgency: 'low' | 'medium' | 'high'
-  title: string
-}
+// Dynamically import the map to avoid SSR issues
+const GoogleMapView = dynamic(() => import('@/components/GoogleMapView'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[450px] flex items-center justify-center bg-black/20 animate-pulse rounded-xl">
+      <div className="text-center space-y-3">
+        <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="text-sm text-muted-foreground font-medium">Initializing Google Maps...</p>
+      </div>
+    </div>
+  )
+})
 
 export function CrisisMap() {
-  const [selectedMarker, setSelectedMarker] = useState<string | null>(null)
-  const parsedReports = useCrisisStore((state) => state.parsedReports)
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
   const tasks = useCrisisStore((state) => state.tasks)
+  const parsedReports = useCrisisStore((state) => state.parsedReports)
+  const volunteers = useCrisisStore((state) => state.volunteers)
 
-  // Simplified location to coordinates
-  const locationCoords: Record<string, { lat: number; lng: number }> = {
-    bangalore: { lat: 12.9716, lng: 77.5946 },
-    delhi: { lat: 28.7041, lng: 77.1025 },
-    mumbai: { lat: 19.076, lng: 72.8777 },
-    default: { lat: 13.0, lng: 77.0 },
-  }
-
-  const markers: MapMarker[] = parsedReports.map((report, idx) => {
-    const locKey = report.location.toLowerCase()
-    const coords =
-      Object.entries(locationCoords).find(([k]) =>
-        locKey.includes(k)
-      )?.[1] || locationCoords.default
-
-    return {
-      id: report.id,
-      lat: coords.lat + (idx * 0.05 - (parsedReports.length * 0.025)),
-      lng: coords.lng + (idx * 0.03 - (parsedReports.length * 0.015)),
-      type: report.type[0] || 'unknown',
-      urgency: report.urgency.level,
-      title: `${report.type.join('/')} - ${report.people} people`,
-    }
-  })
-
-  const gridSize = 100
-  const cellSize = gridSize / 10
+  const selectedReport = useMemo(() => 
+    parsedReports.find(r => r.id === selectedReportId),
+    [parsedReports, selectedReportId]
+  )
 
   const urgencyColors = {
-    low: '#3b82f6',
-    medium: '#eab308',
-    high: '#ef4444',
+    low: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    high: 'bg-red-500/20 text-red-400 border-red-500/30',
   }
 
   return (
-    <div className="glass rounded-xl p-6 space-y-4">
-      <div className="flex justify-between items-center pb-4 border-b border-white/10">
-        <div>
-          <h2 className="text-2xl font-bold">Heat Map</h2>
-          <p className="text-xs text-muted-foreground mt-1">Real-time crisis zones</p>
+    <div className="glass rounded-2xl p-6 space-y-6 border border-white/10 relative overflow-hidden">
+      {/* Background Glow */}
+      <div className="absolute -top-24 -right-24 w-64 h-64 bg-accent/10 blur-[100px] pointer-events-none rounded-full"></div>
+      
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
+            <h2 className="text-2xl font-bold tracking-tight">Geospatial Intelligence</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">Live tracking of crisis reports and relief assets</p>
         </div>
-        <div className="glass rounded-lg px-3 py-2">
-          <p className="text-xs text-muted-foreground">Active Zones</p>
-          <p className="text-xl font-bold text-accent">{markers.length}</p>
+        
+        <div className="flex gap-4">
+          <div className="glass-hover rounded-xl px-4 py-2 border border-white/5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Active Missions</p>
+            <p className="text-2xl font-black text-accent">{tasks.filter(t => t.status !== 'completed').length}</p>
+          </div>
+          <div className="glass-hover rounded-xl px-4 py-2 border border-white/5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Responders</p>
+            <p className="text-2xl font-black text-blue-400">{volunteers.length}</p>
+          </div>
         </div>
       </div>
 
       {/* Map Container */}
-      <div
-        className="rounded-lg relative overflow-hidden backdrop-blur-sm border border-white/10"
-        style={{
-          width: '100%',
-          height: '400px',
-          position: 'relative',
-          background: 'linear-gradient(135deg, rgba(20, 30, 48, 0.8) 0%, rgba(25, 35, 60, 0.8) 100%)',
-        }}
-      >
-        {/* Grid background */}
-        <svg
-          width="100%"
-          height="100%"
-          style={{ position: 'absolute', top: 0, left: 0 }}
-        >
-          {Array.from({ length: 11 }).map((_, i) => (
-            <g key={`grid-${i}`}>
-              <line
-                x1={`${i * 10}%`}
-                y1="0"
-                x2={`${i * 10}%`}
-                y2="100%"
-                stroke="rgba(79, 157, 255, 0.1)"
-                strokeWidth="1"
-              />
-              <line
-                x1="0"
-                y1={`${i * 10}%`}
-                x2="100%"
-                y2={`${i * 10}%`}
-                stroke="rgba(79, 157, 255, 0.1)"
-                strokeWidth="1"
-              />
-            </g>
-          ))}
-        </svg>
+      <div className="relative z-10 h-[500px] w-full">
+        <GoogleMapView 
+          tasks={tasks}
+          parsedReports={parsedReports} 
+          volunteers={volunteers}
+          onMarkerClick={(id) => setSelectedReportId(id === selectedReportId ? null : id)}
+        />
+      </div>
 
-        {/* Markers with pulse effect */}
-        <div style={{ position: 'absolute', width: '100%', height: '100%' }}>
-          {markers.map((marker) => {
-            const x = ((marker.lng - 77) / 1) * 50 + 50
-            const y = ((13 - marker.lat) / 1) * 50 + 50
-            const isSelected = selectedMarker === marker.id
-
-            return (
-              <button
-                key={marker.id}
-                onClick={() =>
-                  setSelectedMarker(
-                    selectedMarker === marker.id ? null : marker.id
-                  )
-                }
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 hover:scale-150"
-                style={{
-                  left: `${Math.max(5, Math.min(95, x))}%`,
-                  top: `${Math.max(5, Math.min(95, y))}%`,
-                }}
-                title={marker.title}
-              >
-                {marker.urgency === 'high' && (
-                  <div
-                    className="absolute inset-0 rounded-full animate-pulse"
-                    style={{
-                      backgroundColor: urgencyColors[marker.urgency],
-                      opacity: 0.5,
-                      width: '24px',
-                      height: '24px',
-                      marginLeft: '-12px',
-                      marginTop: '-12px',
-                    }}
-                  />
+      {/* Details Panel */}
+      {selectedReport && (
+        <div className="glass rounded-xl p-5 border border-white/15 slide-in-up bg-white/5 relative z-10">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h4 className="font-bold text-lg">{selectedReport.type.join(' / ').toUpperCase()}</h4>
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                <span className="opacity-70 text-accent">📍</span> {selectedReport.location}
+              </p>
+            </div>
+            <Badge className={`${urgencyColors[selectedReport.urgency.level]} border px-3 py-1 font-bold`}>
+              {selectedReport.urgency.level.toUpperCase()}
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+              <p className="text-xs text-muted-foreground mb-1 uppercase tracking-tighter">Impacted</p>
+              <p className="font-bold text-base">{selectedReport.people} People</p>
+            </div>
+            <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+              <p className="text-xs text-muted-foreground mb-1 uppercase tracking-tighter">Report ID</p>
+              <p className="font-mono text-xs opacity-80">{selectedReport.id.split('-')[1]}</p>
+            </div>
+            <div className="col-span-2 p-3 rounded-lg bg-white/5 border border-white/5">
+              <p className="text-xs text-muted-foreground mb-1 uppercase tracking-tighter">Keywords detected</p>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedReport.keywords.length > 0 ? (
+                  selectedReport.keywords.map(kw => (
+                    <span key={kw} className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] border border-white/10">
+                      {kw}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs italic opacity-50">None extracted</span>
                 )}
-                <div
-                  className={`w-6 h-6 rounded-full border-2 border-white shadow-lg transition-all ${
-                    isSelected ? 'ring-2 ring-accent ring-offset-2' : ''
-                  }`}
-                  style={{
-                    backgroundColor: urgencyColors[marker.urgency],
-                  }}
-                />
-              </button>
-            )
-          })}
+              </div>
+            </div>
+          </div>
+          
+          <button 
+            onClick={() => setSelectedReportId(null)}
+            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-1"
+          >
+            ✕
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* Legend and Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-        <div className="glass rounded-lg p-4 space-y-3">
-          <h4 className="font-semibold text-foreground">Zone Priority</h4>
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-red-500 pulse-soft" />
-              <span className="text-muted-foreground">High Priority</span>
+      {/* Legend Summary (Desktop only) */}
+      {!selectedReport && (
+        <div className="hidden md:grid grid-cols-3 gap-4 pt-2">
+          <div className="flex items-center gap-3 p-3 glass rounded-xl border border-white/5">
+            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: urgencyColors.medium }} />
-              <span className="text-muted-foreground">Medium Priority</span>
+            <div>
+              <p className="text-xs font-bold text-foreground">Critical Assets</p>
+              <p className="text-[10px] text-muted-foreground">High priority incidents</p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: urgencyColors.low }} />
-              <span className="text-muted-foreground">Low Priority</span>
+          </div>
+          <div className="flex items-center gap-3 p-3 glass rounded-xl border border-white/5">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <div className="w-3 h-3 rounded-sm bg-blue-500 rotate-45"></div>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-foreground">Personnel</p>
+              <p className="text-[10px] text-muted-foreground">Active ground volunteers</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 glass rounded-xl border border-white/5">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+              <div className="w-4 h-0.5 bg-accent/40"></div>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-foreground">Real-time Data</p>
+              <p className="text-[10px] text-muted-foreground">Geo-referenced reports</p>
             </div>
           </div>
         </div>
-
-        {selectedMarker ? (
-          <div className="glass rounded-lg p-4 space-y-3 slide-in-up">
-            <h4 className="font-semibold text-foreground">Zone Details</h4>
-            {markers.map((m) => {
-              if (m.id !== selectedMarker) return null
-              const statusColor = {
-                high: 'bg-red-500/20 text-red-400 border-red-500/30',
-                medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-                low: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-              }[m.urgency]
-              return (
-                <div key={m.id} className="text-sm space-y-2">
-                  <p className="font-semibold text-foreground">{m.title}</p>
-                  <Badge
-                    className={`${statusColor} border`}
-                  >
-                    {m.urgency.toUpperCase()}
-                  </Badge>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="glass rounded-lg p-4 flex items-center justify-center text-center">
-            <p className="text-sm text-muted-foreground">Click a zone for details</p>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }

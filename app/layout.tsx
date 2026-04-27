@@ -1,31 +1,14 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
-  title: 'ReliefSync AI - Crisis Coordination',
-  description: 'Real-time crisis coordination system with AI-powered task assignment',
-  generator: 'v0.app',
+  title: 'ReliefSync AI – Crisis Coordination System',
+  description: 'AI-powered real-time crisis coordination platform for tactical intelligence and responder deployment.',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/icon.svg',
+    apple: '/icon.svg',
   },
 }
 
@@ -38,7 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans antialiased bg-background text-foreground">
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <Toaster position="top-right" richColors theme="dark" />
       </body>
     </html>
   )

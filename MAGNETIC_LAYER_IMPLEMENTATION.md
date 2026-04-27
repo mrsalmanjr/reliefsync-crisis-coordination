@@ -407,11 +407,11 @@ The script is integrated into the app:
 
 ## Deployment
 
-### Vercel
+### Deployment
+
 ```bash
-# Script is automatically served from /public/
+# Deploy to your preferred hosting provider
 npm run build
-vercel deploy
 ```
 
 ### Self-Hosted
