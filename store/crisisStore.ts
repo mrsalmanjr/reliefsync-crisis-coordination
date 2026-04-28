@@ -47,6 +47,7 @@ export interface CrisisStore {
   notifications: Notification[]
   activities: Activity[]
   insights: Insight[]
+  alerts: SystemAlert[]
   isCommandMode: boolean
   activeTab: string
   settings: AppSettings
@@ -117,14 +118,14 @@ export const useCrisisStore = create<CrisisStore>()(
   persist(
     (set, get) => ({
       tasks: [
-        { id: 'task-d1', reportId: 'r1', status: 'assigned', assignedVolunteerId: 'v1', matchedVolunteers: [], createdAt: new Date(Date.now() - 1200000), updatedAt: new Date() },
-        { id: 'task-d2', reportId: 'r2', status: 'analyzed', matchedVolunteers: [], createdAt: new Date(Date.now() - 600000), updatedAt: new Date() },
-        { id: 'task-d3', reportId: 'r3', status: 'detected', matchedVolunteers: [], createdAt: new Date(Date.now() - 300000), updatedAt: new Date() },
+        { id: 'task-d1', reportId: 'r1', parsedReportId: 'p1', status: 'assigned', assignedVolunteerId: 'v1', matchedVolunteers: [], createdAt: new Date(Date.now() - 1200000), updatedAt: new Date() },
+        { id: 'task-d2', reportId: 'r2', parsedReportId: 'p2', status: 'analyzed', matchedVolunteers: [], createdAt: new Date(Date.now() - 600000), updatedAt: new Date() },
+        { id: 'task-d3', reportId: 'r3', parsedReportId: 'p3', status: 'detected', matchedVolunteers: [], createdAt: new Date(Date.now() - 300000), updatedAt: new Date() },
       ],
       parsedReports: [
-        { id: 'p1', reportId: 'r1', type: ['Medical Emergency'], location: 'North Sector Hub', lat: 12.98, lng: 77.62, urgency: { level: 'high', reason: 'Multiple casualties reported' }, people: 12, action: 'Deploy emergency medical units and paramedics.', confidence: 98 },
-        { id: 'p2', reportId: 'r2', type: ['Infrastructure Damage'], location: 'Industrial District', lat: 12.94, lng: 77.58, urgency: { level: 'medium', reason: 'Structural stability compromised' }, people: 0, action: 'Engineers required for site assessment and stabilization.', confidence: 92 },
-        { id: 'p3', reportId: 'r3', type: ['Supply Chain Disruption'], location: 'Downtown Transit', lat: 12.96, lng: 77.54, urgency: { level: 'high', reason: 'Critical supply route blocked' }, people: 250, action: 'Redirect logistics and clear transport corridor.', confidence: 89 },
+        { id: 'p1', reportId: 'r1', type: ['Medical Emergency'], location: 'North Sector Hub', lat: 12.98, lng: 77.62, urgency: { score: 90, level: 'high' }, people: 12, action: 'Deploy emergency medical units and paramedics.', confidence: 98, keywords: ['injured', 'emergency'], createdAt: new Date(Date.now() - 1200000) },
+        { id: 'p2', reportId: 'r2', type: ['Infrastructure Damage'], location: 'Industrial District', lat: 12.94, lng: 77.58, urgency: { score: 55, level: 'medium' }, people: 0, action: 'Engineers required for site assessment and stabilization.', confidence: 92, keywords: ['structural'], createdAt: new Date(Date.now() - 600000) },
+        { id: 'p3', reportId: 'r3', type: ['Supply Chain Disruption'], location: 'Downtown Transit', lat: 12.96, lng: 77.54, urgency: { score: 85, level: 'high' }, people: 250, action: 'Redirect logistics and clear transport corridor.', confidence: 89, keywords: ['supply', 'critical'], createdAt: new Date(Date.now() - 300000) },
       ],
       reports: [
         { id: 'r1', rawText: '12 casualties at North Sector Hub. Need ambulances.', createdAt: new Date(Date.now() - 1200000), processed: true },
@@ -150,6 +151,7 @@ export const useCrisisStore = create<CrisisStore>()(
           timestamp: new Date(),
         }
       ],
+      alerts: [],
       isCommandMode: false,
       activeTab: 'dashboard',
       initialReportDraft: null,

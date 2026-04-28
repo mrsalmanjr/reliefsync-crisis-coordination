@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useCrisisStore } from '@/store/crisisStore'
-import { Report } from '@/types'
+import { Report, ParsedReport } from '@/types'
 import { parseReport } from '@/core/ai/parser'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'

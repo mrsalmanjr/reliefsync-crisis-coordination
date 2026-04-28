@@ -75,14 +75,16 @@ function classifyFallback(text: string) {
 
 // ── Main API handler ───────────────────────────────────────────────────────
 export async function POST(req: Request) {
+  let inputText = ''
   try {
     const { text } = await req.json()
-    console.log('[ReliefSync AI] INPUT:', text)
+    inputText = text || ''
+    console.log('[ReliefSync AI] INPUT:', inputText)
 
     // Check API key
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY === 'your-gemini-api-key') {
       console.log('[ReliefSync AI] No API key configured — using fallback classifier')
-      const fallback = classifyFallback(text)
+      const fallback = classifyFallback(inputText)
       console.log('[ReliefSync AI] FALLBACK RESPONSE:', fallback)
       return NextResponse.json({ analysis: fallback, mock: true })
     }
@@ -93,7 +95,7 @@ export async function POST(req: Request) {
 
     const prompt = `You are a tactical crisis coordination AI. Analyze the following emergency report.
 
-REPORT: "${text}"
+REPORT: "${inputText}"
 
 You MUST return ONLY a valid JSON object with NO extra text, NO markdown, NO explanation.
 Return STRICT JSON in this EXACT format:
@@ -135,7 +137,7 @@ RESPOND WITH JSON ONLY. NO OTHER TEXT.`
 
       // Validate required fields exist
       const validated = {
-        category: analysis.category || classifyFallback(text).category,
+        category: analysis.category || classifyFallback(inputText).category,
         priority: ['LOW', 'MEDIUM', 'HIGH'].includes(analysis.priority) ? analysis.priority : 'MEDIUM',
         peopleAffected: typeof analysis.peopleAffected === 'number' ? analysis.peopleAffected : (analysis.people || 1),
         location: analysis.location || 'Reported Zone',
@@ -148,33 +150,14 @@ RESPOND WITH JSON ONLY. NO OTHER TEXT.`
       return NextResponse.json({ analysis: validated })
     } catch (parseError) {
       console.error('[ReliefSync AI] JSON parse failed, using fallback:', parseError)
-      const fallback = classifyFallback(text)
+      const fallback = classifyFallback(inputText)
       console.log('[ReliefSync AI] FALLBACK RESPONSE:', fallback)
       return NextResponse.json({ analysis: fallback, parseError: true })
     }
   } catch (error) {
     console.error('[ReliefSync AI] Gemini API call failed:', error)
-
-    // Extract text from request body for fallback
-    try {
-      const body = await req.clone().json()
-      const fallback = classifyFallback(body.text || '')
-      console.log('[ReliefSync AI] API ERROR FALLBACK:', fallback)
-      return NextResponse.json({ analysis: fallback, apiError: true })
-    } catch {
-      // Ultimate fallback
-      return NextResponse.json({
-        analysis: {
-          category: 'General Crisis',
-          priority: 'MEDIUM',
-          peopleAffected: 1,
-          location: 'Reported Zone',
-          summary: 'AI system encountered an error. Manual review required.',
-          action: 'Deploy rapid assessment team to evaluate situation.',
-          confidence: 50,
-        },
-        apiError: true,
-      })
-    }
+    const fallback = classifyFallback(inputText)
+    console.log('[ReliefSync AI] API ERROR FALLBACK:', fallback)
+    return NextResponse.json({ analysis: fallback, apiError: true })
   }
 }
